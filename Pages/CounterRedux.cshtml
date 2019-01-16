@@ -1,0 +1,65 @@
+@using blazor_playground.Actions
+@using blazor_playground.Store
+
+@page "/redux-counter"
+@inject CounterStore counterStore
+
+<h1>Counter with Redux.NET</h1>
+<hr/>
+<h2>Current count: @currentCount</h2>
+<br/>
+
+<div class="row">
+    <button class="btn btn-primary" onclick="@IncrementCount">Click me to dispatch an Increment Action</button>
+</div>
+<br/>
+
+<div class="row">
+    <button class="btn btn-primary" onclick="@IncrementCountAsync">Click me to dispatch an Increment <span style="color: red">Async</span> Action</button>
+</div>
+<br/>
+
+<div class="row">
+    <button class="btn btn-primary" onclick="@DecrementCount">Click me to dispatch a Decrement Action</button>
+</div>
+<br/>
+
+<div class="row">
+    <label>Increment for: <input class="form-control" type="number" bind="@incByCount" /></label>
+    <div style="margin: 25px;">
+        <button class="btn btn-primary" onclick="@IncrementByCount">Click me to dispatch an Increment of @incByCount</button>
+    </div>
+</div>
+
+@functions 
+{
+    int currentCount = 0;
+    int incByCount = 1;
+
+    // Component lifecycle method:
+    protected override Task OnInitAsync()
+    {
+        mapStateToProps();
+        return Task.CompletedTask;
+    }
+
+    void DecrementCount() => counterStore.Dispatch(new DecrementAction());
+
+    void IncrementCount() => counterStore.Dispatch(new IncrementAction());
+
+    void IncrementCountAsync() => counterStore.Dispatch(new IncrementActionAsync());
+
+    void IncrementByCount() => counterStore.Dispatch(new IncrementByCount(incByCount));
+
+    void mapStateToProps() 
+    {
+        counterStore.Subscribe(async state => {
+            currentCount = state;
+
+            // interop with JavaScript:
+            await JSRuntime.Current.InvokeAsync<bool>(
+                "log", 
+                $"Dispatched from C# ({DateTime.Now.ToString("H:mm:ss")})! New state is: {state}");
+        });
+    }
+}
